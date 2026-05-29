@@ -1,111 +1,101 @@
 // Copyright 2021 NNTU-CS
-#ifndef INCLUDE_BSTREE_H_
-#define INCLUDE_BSTREE_H_
+#ifndef INCLUDE_BST_H_
+#define INCLUDE_BST_H_
 
 #include <vector>
 #include <utility>
-#include <algorithm>
-#include <stack>
 
-template<typename KeyType>
-class BSTree {
+template <typename T>
+class BST {
 private:
-    struct TreeNode {
-        KeyType key;
-        int freq;                // частота встречаемости
-        TreeNode* left;
-        TreeNode* right;
+    struct Vertex {
+        T key;
+        int freq;
+        Vertex* lLink;
+        Vertex* rLink;
 
-        TreeNode(const KeyType& k) : key(k), freq(1), left(nullptr), right(nullptr) {}
+        explicit Vertex(const T& k) : key(k), freq(1), lLink(nullptr), rLink(nullptr) {}
     };
 
-    TreeNode* m_root;
+    Vertex* m_root;
 
-    // Вспомогательная функция для удаления всех узлов (пост-обход)
-    void deleteSubtree(TreeNode* node) {
-        if (!node) return;
-        deleteSubtree(node->left);
-        deleteSubtree(node->right);
-        delete node;
+    // Рекурсивная вставка (возвращает изменённый корень поддерева)
+    Vertex* add(Vertex* v, const T& k) {
+        if (!v) {
+            return new Vertex(k);
+        }
+        if (k < v->key) {
+            v->lLink = add(v->lLink, k);
+        } else if (k > v->key) {
+            v->rLink = add(v->rLink, k);
+        } else {
+            v->freq++;
+        }
+        return v;
     }
 
-    // Рекурсивный обход для сбора пар (ключ, частота) в отсортированном порядке
-    void inorderCollect(TreeNode* node, std::vector<std::pair<KeyType, int>>& out) const {
-        if (!node) return;
-        inorderCollect(node->left, out);
-        out.emplace_back(node->key, node->freq);
-        inorderCollect(node->right, out);
+    // Рекурсивное вычисление глубины (высота)
+    int getDepth(const Vertex* v) const {
+        if (!v) return -1;
+        int leftDepth = getDepth(v->lLink);
+        int rightDepth = getDepth(v->rLink);
+        return 1 + (leftDepth > rightDepth ? leftDepth : rightDepth);
+    }
+
+    // Рекурсивный поиск вершины по ключу
+    const Vertex* findVertex(const Vertex* v, const T& k) const {
+        if (!v || v->key == k) return v;
+        if (k < v->key) return findVertex(v->lLink, k);
+        return findVertex(v->rLink, k);
+    }
+
+    // Рекурсивный симметричный обход для сбора пар
+    void inOrder(const Vertex* v, std::vector<std::pair<T, int>>& out) const {
+        if (!v) return;
+        inOrder(v->lLink, out);
+        out.emplace_back(v->key, v->freq);
+        inOrder(v->rLink, out);
+    }
+
+    // Рекурсивное удаление всех вершин
+    void erase(Vertex* v) {
+        if (!v) return;
+        erase(v->lLink);
+        erase(v->rLink);
+        delete v;
     }
 
 public:
-    BSTree() : m_root(nullptr) {}
+    BST() : m_root(nullptr) {}
 
-    ~BSTree() {
-        deleteSubtree(m_root);
+    ~BST() {
+        erase(m_root);
     }
 
-    // Итеративная вставка (или обновление частоты)
-    void add(const KeyType& key) {
-        if (!m_root) {
-            m_root = new TreeNode(key);
-            return;
-        }
-
-        TreeNode* curr = m_root;
-        while (curr) {
-            if (key < curr->key) {
-                if (!curr->left) {
-                    curr->left = new TreeNode(key);
-                    return;
-                }
-                curr = curr->left;
-            } else if (key > curr->key) {
-                if (!curr->right) {
-                    curr->right = new TreeNode(key);
-                    return;
-                }
-                curr = curr->right;
-            } else {
-                // ключ уже существует
-                curr->freq++;
-                return;
-            }
-        }
+    void insert(const T& key) {
+        m_root = add(m_root, key);
     }
 
-    // Высота дерева (рекурсивно)
-    int height() const {
-        std::function<int(TreeNode*)> h = [&](TreeNode* node) -> int {
-            if (!node) return -1;
-            return 1 + std::max(h(node->left), h(node->right));
-        };
-        return h(m_root);
+    int depth() const {
+        return getDepth(m_root);
     }
 
-    // Поиск частоты по ключу (0 – если ключ отсутствует)
-    int getFrequency(const KeyType& key) const {
-        TreeNode* curr = m_root;
-        while (curr) {
-            if (key < curr->key)
-                curr = curr->left;
-            else if (key > curr->key)
-                curr = curr->right;
-            else
-                return curr->freq;
-        }
-        return 0;
+    int search(const T& value) const {
+        const Vertex* v = findVertex(m_root, value);
+        return v ? v->freq : 0;
     }
 
-    // Возвращает все пары (ключ, частота), отсортированные по ключу
-    std::vector<std::pair<KeyType, int>> getAllSortedByKey() const {
-        std::vector<std::pair<KeyType, int>> result;
-        inorderCollect(m_root, result);
+    std::vector<std::pair<T, int>> getAllSortedByKey() const {
+        std::vector<std::pair<T, int>> result;
+        inOrder(m_root, result);
         return result;
     }
 
-    bool isEmpty() const {
+    bool empty() const {
         return m_root == nullptr;
     }
 };
+
+#endif  // INCLUDE_BST_H_
 
 #endif  // INCLUDE_BSTREE_H_
