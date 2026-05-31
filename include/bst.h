@@ -97,4 +97,3 @@ class BST {
 };
 
 #endif  // INCLUDE_BST_H_
-#endif  // INCLUDE_BSTREE_H_
