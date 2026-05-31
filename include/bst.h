@@ -7,7 +7,7 @@
 
 template <typename T>
 class BST {
-private:
+ private:
     struct Vertex {
         T key;
         int freq;
@@ -65,7 +65,7 @@ private:
         delete v;
     }
 
-public:
+ public:
     BST() : m_root(nullptr) {}
 
     ~BST() {
@@ -97,5 +97,4 @@ public:
 };
 
 #endif  // INCLUDE_BST_H_
-
 #endif  // INCLUDE_BSTREE_H_
