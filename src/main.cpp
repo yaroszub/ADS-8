@@ -9,7 +9,7 @@ void printFreq(BST<std::string>& tree);
 int main(int argc, char* argv[]) {
     // Определяем имя файла: из аргументов или по умолчанию
     const char* filename = (argc > 1) ? argv[1] : "src/war_peace.txt";
-    BST<std::string> wordTree; 
+    BST<std::string> wordTree;
     std::cout << "Чтение файла: " << filename << std::endl;
     makeTree(wordTree, filename);
     if (wordTree.empty()) {
